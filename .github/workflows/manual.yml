@@ -13,36 +13,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # Step 3: Install Poetry
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           export PATH="$HOME/.local/bin:$PATH"
 
+      # Step 4: Install dependencies using Poetry
       - name: Install dependencies using Poetry
         run: |
           poetry install
 
+      # Step 5: Install system dependencies for Playwright
       - name: Install system dependencies for Playwright
         run: |
-           pip install playwright
-           playwright install
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libatk-bridge2.0-0 \
+            libgtk-3-0 \
+            libx11-xcb1 \
+            libdbus-glib-1-2 \
+            xdg-utils \
+            libasound2 \
+            libxss1 \
+            libappindicator3-1 \
+            libvpx6 \
+            libgstreamer1.0-0 \
+            libgstreamer-plugins-base1.0-0 \
+            libgstreamer-plugins-good1.0-0 \
+            libflite1 \
+            libharfbuzz-icu0
 
+      # Step 6: Install Playwright browsers
       - name: Install Playwright browsers
         run: |
           poetry run playwright install --with-deps
 
+      # Step 7: Run Behave tests
       - name: Run Behave tests
         run: |
           poetry run behave feature/ --format json --outfile result.json -v  # Enable verbose logging
 
+      # Step 8: Check test results and upload artifacts
       - name: Check test results and upload artifacts
         if: ${{ success() }}
         run: |
@@ -53,13 +76,27 @@ jobs:
             echo "All tests passed!"
           fi
 
-      - name: Upload test results
+      # Step 9: Upload Behave test results
+      - name: Upload Behave test results
         uses: actions/upload-artifact@v3
         with:
           name: behave-results
           path: result.json
 
+      # Step 10: Generate and upload Allure report
+      - name: Generate Allure report
+        run: |
+          allure generate allure-results --clean -o allure-report
+
+      # Step 11: Publish Allure report
       - name: Upload Allure report
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: allure-report
+
+      # Optional: Serve Allure report (for local access, not for CI)
+      - name: Serve Allure report
         if: ${{ success() }}
         run: |
           allure serve allure-report/
