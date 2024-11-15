@@ -1,0 +1,84 @@
+name: Playwright BDD Tests with Behave and Poetry
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+
+      - name: Install dependencies using Poetry
+        run: |
+          poetry install
+
+      - name: Install system dependencies for Playwright
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libatk-bridge2.0-0 \
+            libgtk-3-0 \
+            libx11-xcb1 \
+            libdbus-glib-1-2 \
+            xdg-utils \
+            libasound2 \
+            libxss1 \
+            libappindicator3-1 \
+            libwoff2dec1 \
+            libvpx6 \
+            libevent-2.1-6 \
+            libopus0 \
+            libgstreamer1.0-0 \
+            libgstreamer-plugins-base1.0-0 \
+            libgstreamer-plugins-good1.0-0 \
+            libflite1 \
+            libharfbuzz-icu0 \
+            libx264-155
+
+      - name: Install Playwright browsers
+        run: |
+          poetry run playwright install --with-deps
+
+      - name: Run Behave tests
+        run: |
+          poetry run behave feature/ --format json --outfile result.json -v  # Enable verbose logging
+
+      - name: Check test results and upload artifacts
+        if: ${{ success() }}
+        run: |
+          if grep -q '"status": "failed"' result.json; then
+            echo "Some tests failed!"
+            exit 1
+          else
+            echo "All tests passed!"
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: behave-results
+          path: result.json
+
+      - name: Upload Allure report
+        if: ${{ success() }}
+        run: |
+          allure serve allure-report/
