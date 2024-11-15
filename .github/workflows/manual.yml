@@ -32,27 +32,7 @@ jobs:
 
       - name: Install system dependencies for Playwright
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libnss3 \
-            libatk-bridge2.0-0 \
-            libgtk-3-0 \
-            libx11-xcb1 \
-            libdbus-glib-1-2 \
-            xdg-utils \
-            libasound2 \
-            libxss1 \
-            libappindicator3-1 \
-            libwoff2-1.0-2 \
-            libvpx5 \
-            libevent-2.1-7 \
-            libx264-dev \
-            libgstreamer1.0-0 \
-            libgstreamer-plugins-base1.0-0 \
-            libgstreamer-plugins-good1.0-0 \
-            libflite1 \
-            libharfbuzz-icu0 \
-            libx264-155
+           playwright install
 
       - name: Install Playwright browsers
         run: |
