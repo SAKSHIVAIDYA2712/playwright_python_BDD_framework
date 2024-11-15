@@ -46,6 +46,11 @@ jobs:
         run: |
           poetry run playwright install
 
+      # Step 6: Verify Playwright installation
+      - name: Verify Playwright installation
+        run: |
+          poetry run playwright install --with-deps
+
       # Step 6: Run Behave BDD tests
       - name: Run Behave tests
         run: |
