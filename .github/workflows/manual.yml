@@ -32,6 +32,7 @@ jobs:
 
       - name: Install system dependencies for Playwright
         run: |
+           pip install playwright
            playwright install
 
       - name: Install Playwright browsers
